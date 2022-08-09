@@ -1,10 +1,16 @@
 const express = require("express");
 const dotenv = require("dotenv");
 
+// Route files
+const trips = require("./routes/trips");
+
 // Load env vars
 dotenv.config({ path: "./config/config.env"});
 
 const app = express();
+
+// Mount routers
+app.use("/trips", trips);
 
 const PORT = process.env.PORT || 5000;
 
