@@ -14,7 +14,7 @@ const tripSchema = new Schema({
   },
   content: {
     type: String,
-    required: [true, 内容を入力してください],
+    required: [true, "内容を入力してください"],
     maxLength: [2000, "2000字以内で入力してください"]
   },
   // fishes: [{type:Schema.Types.ObjectId, ref: "Fish"}],
