@@ -6,7 +6,57 @@ const Trip = require("../models/Trip");
 // @route   GET /trips
 // @access  Public
 exports.getTrips = asyncHandler(async (req, res, next) => {
-  const trips = await Trip.find();
+  let query;
+
+  // Copy req.query
+  const reqQuery = { ...req.query };
+
+  // Fields to exclude
+  const removeFields = ["page", "limit"];
+
+  // Loop over removeFields and delete them from reqQuery
+  removeFields.forEach(param => delete reqQuery[param]);
+
+  // Create query string
+  let queryStr = JSON.stringify(reqQuery);
+
+  // Create operators ($gt, $gte, etc)
+  queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+
+  // Finding resource
+  query = Trip.find(JSON.parse(queryStr));
+
+  // Sort
+  query = query.sort("-createdAt");
+
+  // Pagination
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+  const total = await Trip.countDocuments();
+  const skip = (page - 1) * limit;
+
+  query = query.skip(skip).limit(limit);
+
+  const trips = await query;
+
+  // Pagination result
+  let pagination = {};
+
+  if (endIndex < total) {
+    pagination.next = {
+      page: page + 1,
+      limit
+    }
+  }
+
+  if (startIndex > 0) {
+    pagination.pre = {
+      page: page - 1,
+      limit
+    }
+  }
 
   if (!trips) {
     return res.status(400).json({ success: false });
@@ -15,6 +65,7 @@ exports.getTrips = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     count: trips.length,
+    pagination,
     data: trips
   });
 });
