@@ -94,47 +94,16 @@ exports.getTrip = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.createTrip = asyncHandler(async (req, res, next) => {
   // tripフィールドに関してバリデーションチェック
-  // let newTrip = new Trip(req.body);
-  // let err = newTrip.validateSync();
-  // if (err !== undefined) {
-  //   return next(err);
-  // }
   let newTrip = validateTrip(req.body);
   let fishes = [];
-  // req.bodyとreq.filesから投稿された釣果と同数のfishオブジェクトを作成する
+  // req.bodyとreq.filesとnewTripから投稿された釣果と同数のfishオブジェクトを作成する
   if (req.body.fishName || req.files) {
     fishes = makeFishObjectsArray(req, newTrip);
-    // fishNameが単数の場合、文字列から配列に変換しておく
-    // let fishNames = typeof(req.body.fishName) === "string" ? [req.body.fishName] : req.body.fishName;
-
-
-    // for (let i = 0; i < fishNames.length; i++) {
-    //   if (req.files && req.files[`fishImage_${i}`]) {
-    //     fishes.push({
-    //       name: fishNames[i],
-    //       image: req.files[`fishImage_${i}`].md5,
-    //       trip: newTrip._id
-    //     })
-    //   } else {
-    //     fishes.push({
-    //       name: fishNames[i],
-    //       trip: newTrip._id
-    //     })
-    //   }
-    // }
   }
 
   // 各fishオブジェクトに対してバリデーションチェック
-  if (req.body.fishName || req.files) {
+  if (fishes.length > 0) {
     validateFishes(fishes);
-    // for (let i = 0; i < fishes.length; i++) {
-    //   let newFish = new Fish(fishes[i]);
-    //   console.log(newFish);
-    //   let err = newFish.validateSync();
-    //   if (err !== undefined) {
-    //     return next(err);
-    //   }
-    // }
   }
 
   // 全てのデータがバリデーション通過したのでTripとFishesを保存する
