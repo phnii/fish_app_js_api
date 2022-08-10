@@ -27,7 +27,7 @@ exports.getTrips = asyncHandler(async (req, res, next) => {
   queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
   // Finding resource
-  query = Trip.find(JSON.parse(queryStr));
+  query = Trip.find().populate("fishes");
 
   // Sort
   query = query.sort("-createdAt");
@@ -43,6 +43,8 @@ exports.getTrips = asyncHandler(async (req, res, next) => {
   query = query.skip(skip).limit(limit);
 
   const trips = await query;
+
+  // const trips = await query;
 
   // Pagination result
   let pagination = {};
@@ -77,7 +79,7 @@ exports.getTrips = asyncHandler(async (req, res, next) => {
 // @route   GET /trips/:id
 // @access  Public
 exports.getTrip = asyncHandler(async (req, res, next) => {
-  const trip = await Trip.findById(req.params.id);
+  const trip = await Trip.findById(req.params.id).populate("fishes");
 
   if (!trip) {
     return res.status(400).json({ success: false });
@@ -268,7 +270,7 @@ const makeFishObjectsArray = (req, trip) => {
   }
 
   return fishes;
-}
+};
 
 // fishオブジェクトの配列を受け取って各オブジェクトにバリデーションチェックする
 // 引っかかればその時点でエラーを送って次のミドルウェアに処理を移す
@@ -280,4 +282,4 @@ const validateFishes = (fishes, next) => {
       return next(err);
     }
   }
-}
+};

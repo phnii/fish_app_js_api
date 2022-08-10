@@ -26,7 +26,15 @@ const tripSchema = new Schema({
   }
 });
 
-// Cascade delete courses when a bootcamp is deleted
+// Reverse populate with virtuals
+tripSchema.virtual("fishes", {
+  ref: "Fish",
+  localField: "_id",
+  foreignField: "trip",
+  justOne: false
+});
+
+// Cascade delete fishes when a trip is deleted
 tripSchema.pre("remove", async function (next) {
   await this.model("Fish").deleteMany({ trip: this._id });
   next();
