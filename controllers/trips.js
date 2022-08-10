@@ -198,6 +198,40 @@ exports.deleteTrip = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Get trips by fish name
+// @route   GET /trips/search
+// @access  Public
+exports.searchTrips = asyncHandler(async (req, res, next) => {
+  let trips = new Set();
+  if (!req.body.fishName) {
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+    return next();
+  }
+
+  // 月ごとの検索魚名と一致する釣果の数を格納する配列を用意
+  let fishesPerMonth = new Array(12);
+  fishesPerMonth.fill(0);
+
+  let fishes = await Fish.find({ "name": req.body.fishName })
+                         .populate({ path: "trip" });
+  fishes.forEach(fish => {
+    trips.add(fish.trip);
+    fishesPerMonth[fish.trip.createdAt.getMonth()]++;
+  })
+
+  res.status(200).json({
+    success: true,
+    data: [trips, fishesPerMonth]
+  });
+});
+
+
+
+
+
 // req.bodyからTripオブジェクトを作成しバリデーションチェックし通過すればオブジェクトを返す
 const validateTrip = (body, next) => {
   let newTrip = new Trip(body);
@@ -206,7 +240,7 @@ const validateTrip = (body, next) => {
     return next(err);
   }
   return newTrip;
-}
+};
 
 // req.bodyとreq.filesから投稿された釣果と同数のfishオブジェクトを作成し配列に詰めて返す
 //    fish(fishName, fishImage_x)フィールドのPOSTデータの構造
@@ -236,6 +270,8 @@ const makeFishObjectsArray = (req, trip) => {
   return fishes;
 }
 
+// fishオブジェクトの配列を受け取って各オブジェクトにバリデーションチェックする
+// 引っかかればその時点でエラーを送って次のミドルウェアに処理を移す
 const validateFishes = (fishes, next) => {
   for (let i = 0; i < fishes.length; i++) {
     let newFish = new Fish(fishes[i]);
