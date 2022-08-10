@@ -9,12 +9,14 @@ const {
   searchTrips
 } = require("../controllers/trips");
 
+const { protect } = require("../middleware/auth");
+
 const router = express.Router();
 
 router
   .route("/")
   .get(getTrips)
-  .post(createTrip);
+  .post(protect, createTrip);
 
 router
   .route("/search")
@@ -23,7 +25,7 @@ router
 router
   .route("/:id")
   .get(getTrip)
-  .put(updateTrip)
-  .delete(deleteTrip)
+  .put(protect, updateTrip)
+  .delete(protect, deleteTrip)
 
 module.exports = router;

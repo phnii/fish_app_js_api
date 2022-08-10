@@ -110,7 +110,7 @@ exports.createTrip = asyncHandler(async (req, res, next) => {
 
   // 全てのデータがバリデーション通過したのでTripとFishesを保存する
   const trip = await newTrip.save();
-  fishes = await Fish.create(fishes);
+  Fish.create(fishes);
 
   // 画像データを/public/uploadsに保存する
   for (let i = 0; i < fishes.length; i++) {
