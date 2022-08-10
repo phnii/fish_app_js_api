@@ -185,11 +185,13 @@ exports.updateTrip = asyncHandler(async (req, res, next) => {
 // @route   DELETE /trips/:id
 // @access  Private
 exports.deleteTrip = asyncHandler(async (req, res, next) => {
-  const trip = await Trip.findByIdAndRemove(req.params.id);
+  const trip = await Trip.findById(req.params.id);
 
   if (!trip) {
     return res.status(400).json({ success: false });
   }
+
+  trip.remove();
   res.status(200).json({
     success: true,
     data: {}

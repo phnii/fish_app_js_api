@@ -26,4 +26,10 @@ const tripSchema = new Schema({
   }
 });
 
+// Cascade delete courses when a bootcamp is deleted
+tripSchema.pre("remove", async function (next) {
+  await this.model("Fish").deleteMany({ trip: this._id });
+  next();
+});
+
 module.exports = mongoose.model("Trip", tripSchema);
