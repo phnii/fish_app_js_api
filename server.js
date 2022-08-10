@@ -14,6 +14,7 @@ connectDB();
 
 // Route files
 const trips = require("./routes/trips");
+const auth = require("./routes/auth");
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(fileUpload());
 
 // Mount routers
 app.use("/trips", trips);
+app.use("/auth", auth);
 
 app.use(errorHandler);
 
