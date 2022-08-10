@@ -19,6 +19,7 @@ const userSchema = new Schema({
     type: String,
     required: [true, "パスワードを入力してください"],
     minlength: [8, "パスワードは8文字以上入力してください"],
+    select: false
   },
   introduce: {
     type: String
@@ -41,11 +42,17 @@ userSchema.pre("save", async function(next) {
 });
 
 // Sign JWT and return
-userSchema.methods.getSignJwtToken = function() {
+userSchema.methods.getSignedJwtToken = function() {
   return jwt.sign({ id: this._id}, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE
   });
-}
+};
+
+// Match user entered password to hashed password in database
+userSchema.methods.matchPassword = async function(enteredPassword) {
+  // return true / false
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 userSchema.methods.isFollowing = function(target) {
   for (let i = 0; i < this.followings.length; i++) {
