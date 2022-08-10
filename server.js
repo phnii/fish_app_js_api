@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const fileUpload = require("express-fileupload");
 const morgan = require("morgan");
 const colors = require("colors");
 const errorHandler = require("./middleware/error");
@@ -23,6 +24,9 @@ app.use(express.json());
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+
+// File uploading
+app.use(fileUpload());
 
 
 // Mount routers
