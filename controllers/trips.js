@@ -94,7 +94,7 @@ exports.getTrip = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.createTrip = asyncHandler(async (req, res, next) => {
   // tripフィールドに関してバリデーションチェック
-  let newTrip = validateTrip(req.body);
+  let newTrip = validateTrip(req.body, next);
   let fishes = [];
   // req.bodyとreq.filesとnewTripから投稿された釣果と同数のfishオブジェクトを作成する
   if (req.body.fishName || req.files) {
@@ -103,7 +103,7 @@ exports.createTrip = asyncHandler(async (req, res, next) => {
 
   // 各fishオブジェクトに対してバリデーションチェック
   if (fishes.length > 0) {
-    validateFishes(fishes);
+    validateFishes(fishes, next);
   }
 
   // 全てのデータがバリデーション通過したのでTripとFishesを保存する
@@ -128,18 +128,56 @@ exports.createTrip = asyncHandler(async (req, res, next) => {
 // @route   PUT /trips/:id
 // @access  Private
 exports.updateTrip = asyncHandler(async (req, res, next) => {
-  const trip = await Trip.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
-
+  let trip = await Trip.findById(req.params.id);
   if (!trip) {
     return res.status(400).json({ success: false });
   }
 
+  // Tripオブジェクトのバリデーションチェック
+  validateTrip(req.body, next);
+
+  let fishes = [];
+  // req.bodyとreq.filesとnewTripから投稿された釣果と同数のfishオブジェクトを作成する
+  if (req.body.fishName || req.files) {
+    fishes = makeFishObjectsArray(req, trip);
+  }
+
+  // 各fishオブジェクトに対してバリデーションチェック
+  if (req.body.fishName || req.files) {
+    validateFishes(fishes, next);
+  }
+
+  // 以上で全てのデータがバリデーション通過したので以下TripとFishesを保存する
+  trip = await Trip.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  fishes = await Fish.create(fishes);
+
+  if (req.files) {
+    // 画像データを/public/uploadsに保存する
+    for (let i = 0; i < fishes.length; i++) {
+      if (req.files && req.files[`fishImage_${i}`]) {
+        fs.writeFile("./public/uploads/" + req.files[`fishImage_${i}`].md5 + Date.now() + ".jpg", 
+                req.files[`fishImage_${i}`].data, (err) => next(err));
+      }
+    }
+  }
+
+  // 釣果の削除があれば削除する
+  if (req.body.deleteCheckBox) {
+    console.log("tasikanitoowtter")
+    // deleteCheckBoxのチェックボックスが一つしかチェックされなかった時でも配列になるように変換する
+    // 配列の各要素には削除対象のFishオブジェクidが入る
+    let deleteCheckBoxArray = (typeof(req.body.deleteCheckBox) === "string") ? [req.body.deleteCheckBox] : req.body.deleteCheckBox;
+    deleteCheckBoxArray.forEach(async (fishId) => {
+      await Fish.findByIdAndDelete(fishId);
+    });
+  }
+
   res.status(200).json({
     success: true,
-    data: trip
+    data: [trip, fishes]
   });
 });
 
@@ -159,7 +197,7 @@ exports.deleteTrip = asyncHandler(async (req, res, next) => {
 });
 
 // req.bodyからTripオブジェクトを作成しバリデーションチェックし通過すればオブジェクトを返す
-const validateTrip = (body) => {
+const validateTrip = (body, next) => {
   let newTrip = new Trip(body);
   let err = newTrip.validateSync();
   if (err !== undefined) {
@@ -196,7 +234,7 @@ const makeFishObjectsArray = (req, trip) => {
   return fishes;
 }
 
-const validateFishes = fishes => {
+const validateFishes = (fishes, next) => {
   for (let i = 0; i < fishes.length; i++) {
     let newFish = new Fish(fishes[i]);
     let err = newFish.validateSync();
