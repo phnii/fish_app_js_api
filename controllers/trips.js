@@ -95,6 +95,8 @@ exports.getTrip = asyncHandler(async (req, res, next) => {
 // @route   POST /trips
 // @access  Private
 exports.createTrip = asyncHandler(async (req, res, next) => {
+  // req.bodyにuser._idを加える
+  req.body.user = req.user._id;
   // tripフィールドに関してバリデーションチェック
   let newTrip = validateTrip(req.body, next);
   let fishes = [];
@@ -130,9 +132,16 @@ exports.createTrip = asyncHandler(async (req, res, next) => {
 // @route   PUT /trips/:id
 // @access  Private
 exports.updateTrip = asyncHandler(async (req, res, next) => {
+  // req.bodyにuser._idを加える
+  req.body.user = req.user._id;
   let trip = await Trip.findById(req.params.id);
   if (!trip) {
     return res.status(400).json({ success: false });
+  }
+
+  // req.userがtripの投稿者であることをチェック
+  if (trip.user.toString() !== req.user.id) {
+    return next(new ErrorResponse(`ユーザー ${req.user._id} にはこの投稿を更新する権限がありません`, 401));
   }
 
   // Tripオブジェクトのバリデーションチェック
@@ -191,6 +200,11 @@ exports.deleteTrip = asyncHandler(async (req, res, next) => {
 
   if (!trip) {
     return res.status(400).json({ success: false });
+  }
+
+  // req.userがtripの投稿者であることをチェック
+  if (trip.user.toString() !== req.user.id) {
+    return next(new ErrorResponse(`ユーザー ${req.user._id} にはこの投稿を削除する権限がありません`, 401));
   }
 
   trip.remove();

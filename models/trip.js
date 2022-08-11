@@ -17,8 +17,11 @@ const tripSchema = new Schema({
     required: [true, "内容を入力してください"],
     maxLength: [2000, "2000字以内で入力してください"]
   },
-  // fishes: [{type:Schema.Types.ObjectId, ref: "Fish"}],
-  // user: {type: Schema.Types.ObjectId, ref: "User", required: true},
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
   // comments: [{type: Schema.Types.ObjectId, ref: "Comment"}],
   createdAt: {
     type: Date,
